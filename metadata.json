@@ -1,0 +1,6 @@
+{
+  "name": "Dineora",
+  "description": "AI-powered restaurant reservation, discovery, recommendation, and restaurant intelligence platform.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

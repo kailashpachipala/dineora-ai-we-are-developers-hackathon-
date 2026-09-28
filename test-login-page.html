@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .issue-list {
+            list-style: none;
+            padding: 0;
+        }
+        .issue-list li {
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff3f3;
+            border-left: 4px solid #dc3545;
+            border-radius: 3px;
+        }
+        .issue-list li:before {
+            content: "⚠️ ";
+            font-weight: bold;
+        }
+        .issue-list .severity {
+            font-weight: bold;
+            color: #dc3545;
+        }
+        .test-results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Login Page Correction Test</h1>
+        
+        <div class="test-controls">
+            <button onclick="runAccessibilityTests()">Run Accessibility Tests</button>
+            <button onclick="runValidationTests()">Run Validation Tests</button>
+            <button onclick="runUXTests()">Run UX Tests</button>
+            <button onclick="clearResults()">Clear Results</button>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        function displayResults(title, issues) {
+            const resultsDiv = document.getElementById('results');
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            
+            const heading = document.createElement('h2');
+            heading.textContent = title;
+            section.appendChild(heading);
+            
+            if (issues.length === 0) {
+                const noIssues = document.createElement('p');
+                noIssues.style.color = '#28a745';
+                noIssues.textContent = '✅ No issues found';
+                section.appendChild(noIssues);
+            } else {
+                const list = document.createElement('ul');
+                list.className = 'issue-list';
+                issues.forEach(issue => {
+                    const li = document.createElement('li');
+                    const strong = document.createElement('strong');
+                    strong.textContent = issue.severity + ': ';
+                    li.appendChild(strong);
+                    li.appendChild(document.createTextNode(issue.description));
+                    list.appendChild(li);
+                });
+                section.appendChild(list);
+            }
+            
+            resultsDiv.insertBefore(section, resultsDiv.firstChild);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        async function runAccessibilityTests() {
+            const issues = [];
+            
+            // Check for proper form labels
+            const labels = document.querySelectorAll('label');
+            labels.forEach(label => {
+                const forAttr = label.getAttribute('for');
+                if (!forAttr) {
+                    issues.push({
+                        severity: 'WARNING',
+                        description: 'Form label missing "for" attribute'
+                    });
+                }
+            });
+            
+            // Check for proper input associations
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                const id = input.getAttribute('id');
+                const labelFor = document.querySelector(`label[for="${id}"]`);
+                if (id && !labelFor) {
+                    issues.push({
+                        severity: 'WARNING',
+                        description: `Input with id "${id}" has no associated label`
+                    });
+                }
+            });
+            
+            // Check for proper ARIA labels
+            const ariaLabels = document.querySelectorAll('[aria-label]');
+            ariaLabels.forEach(el => {
+                const ariaLabel = el.getAttribute('aria-label');
+                if (!ariaLabel || ariaLabel.trim() === '') {
+                    issues.push({
+                        severity: 'ERROR',
+                        description: 'Element has empty aria-label attribute'
+                    });
+                }
+            });
+            
+            // Check for error message announcements
+            const errorMessages = document.querySelectorAll('[role="alert"], [role="status"]');
+            if (errorMessages.length === 0) {
+                issues.push({
+                    severity: 'WARNING',
+                    description: 'No ARIA live regions for error announcements'
+                });
+            }
+            
+            displayResults('Accessibility Tests', issues);
+        }
+        
+        async function runValidationTests() {
+            const issues = [];
+            
+            // Check email validation
+            const emailInput = document.querySelector('#login-email');
+            if (emailInput) {
+                const type = emailInput.getAttribute('type');
+                if (type === 'email') {
+                    // Check if browser validation is enabled
+                    if (!emailInput.hasAttribute('pattern') && !emailInput.hasAttribute('required')) {
+                        issues.push({
+                            severity: 'INFO',
+                            description: 'Email input lacks pattern validation for email format'
+                        });
+                    }
+                }
+            }
+            
+            // Check password validation
+            const passwordInput = document.querySelector('#login-password');
+            if (passwordInput) {
+                const minLength = passwordInput.getAttribute('minLength') || passwordInput.getAttribute('pattern');
+                if (!minLength) {
+                    issues.push({
+                        severity: 'WARNING',
+                        description: 'Password input lacks minimum length or pattern validation'
+                    });
+                }
+            }
+            
+            // Check form submission handling
+            const form = document.querySelector('form');
+            if (form) {
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (!submitButton) {
+                    issues.push({
+                        severity: 'ERROR',
+                        description: 'Form lacks submit button'
+                    });
+                }
+            }
+            
+            displayResults('Validation Tests', issues);
+        }
+        
+        async function runUXTests() {
+            const issues = [];
+            
+            // Check for password visibility toggle
+            const passwordInput = document.querySelector('#login-password');
+            if (passwordInput && !passwordInput.nextElementSibling?.querySelector('button')) {
+                issues.push({
+                    severity: 'INFO',
+                    description: 'No password visibility toggle available'
+                });
+            }
+            
+            // Check for password strength indicator
+            const strengthIndicator = document.querySelector('.password-strength');
+            if (!strengthIndicator) {
+                issues.push({
+                    severity: 'INFO',
+                    description: 'No password strength indicator visible'
+                });
+            }
+            
+            // Check for remember me default state
+            const rememberCheckbox = document.querySelector('input[type="checkbox"]');
+            if (rememberCheckbox && rememberCheckbox.checked) {
+                issues.push({
+                    severity: 'INFO',
+                    description: 'Remember me checkbox is pre-checked (may be privacy concern)'
+                });
+            }
+            
+            // Check for notice/error message styling
+            const noticeElement = document.querySelector('.login-notice');
+            if (noticeElement) {
+                const style = window.getComputedStyle(noticeElement);
+                if (style.backgroundColor === '' || style.backgroundColor === 'rgba(0, 0, 0, 0)') {
+                    issues.push({
+                        severity: 'WARNING',
+                        description: 'Notice/error message lacks proper visual styling'
+                    });
+                }
+            }
+            
+            displayResults('UX Tests', issues);
+        }
+        
+        // Auto-run tests when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                runAccessibilityTests();
+                runValidationTests();
+                runUXTests();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
